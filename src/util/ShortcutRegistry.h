@@ -27,6 +27,7 @@ enum class ShortcutId {
   ScreenClean,
   Sleep,
   OpdsBrowser,
+  AgendaRefresh,  // AGENDA-PATCH
 };
 
 struct ShortcutDefinition {
@@ -39,8 +40,8 @@ struct ShortcutDefinition {
   uint8_t CrossPointSettings::* visiblePtr;
 };
 
-inline const std::array<ShortcutDefinition, 17>& getShortcutDefinitions() {
-  static const std::array<ShortcutDefinition, 17> definitions = {
+inline const std::array<ShortcutDefinition, 18>& getShortcutDefinitions() {
+  static const std::array<ShortcutDefinition, 18> definitions = {
       ShortcutDefinition{ShortcutId::BrowseFiles, StrId::STR_BROWSE_FILES, StrId::STR_NONE_OPT, UIIcon::Folder,
                          &CrossPointSettings::browseFilesShortcut, &CrossPointSettings::browseFilesShortcutOrder,
                          &CrossPointSettings::browseFilesShortcutVisible},
@@ -95,6 +96,11 @@ inline const std::array<ShortcutDefinition, 17>& getShortcutDefinitions() {
       ShortcutDefinition{ShortcutId::OpdsBrowser, StrId::STR_OPDS_BROWSER, StrId::STR_NONE_OPT, UIIcon::Library,
                          &CrossPointSettings::opdsBrowserShortcut, &CrossPointSettings::opdsBrowserShortcutOrder,
                          &CrossPointSettings::opdsBrowserShortcutVisible},
+      // AGENDA-PATCH
+      ShortcutDefinition{ShortcutId::AgendaRefresh, StrId::STR_REFRESH_AGENDA, StrId::STR_REFRESH_AGENDA_DESC,
+                         UIIcon::Wifi, &CrossPointSettings::agendaRefreshShortcut,
+                         &CrossPointSettings::agendaRefreshShortcutOrder,
+                         &CrossPointSettings::agendaRefreshShortcutVisible},
   };
 
   return definitions;

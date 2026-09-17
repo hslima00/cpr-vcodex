@@ -669,6 +669,7 @@ bool loadSettingsDirect(CrossPointSettings& s, const JsonDocument& doc, bool* ne
     strncpy(s.agendaServerToken, token.c_str(), sizeof(s.agendaServerToken) - 1);
     s.agendaServerToken[sizeof(s.agendaServerToken) - 1] = '\0';
   }
+  loadToggle("agendaUpdateOnSleep", s.agendaUpdateOnSleep);
 
   loadToggle("statusBarChapterPageCount", s.statusBarChapterPageCount);
   loadToggle("statusBarBookProgressPercentage", s.statusBarBookProgressPercentage);
@@ -811,6 +812,11 @@ bool loadSettingsDirect(CrossPointSettings& s, const JsonDocument& doc, bool* ne
       clamp(doc["opdsBrowserShortcut"] | s.opdsBrowserShortcut, shortcutLocationCount, s.opdsBrowserShortcut);
   s.opdsBrowserShortcutOrder = clamp(doc["opdsBrowserShortcutOrder"] | s.opdsBrowserShortcutOrder, shortcutOrderCount,
                                      s.opdsBrowserShortcutOrder);
+  // AGENDA-PATCH
+  s.agendaRefreshShortcut =
+      clamp(doc["agendaRefreshShortcut"] | s.agendaRefreshShortcut, shortcutLocationCount, s.agendaRefreshShortcut);
+  s.agendaRefreshShortcutOrder = clamp(doc["agendaRefreshShortcutOrder"] | s.agendaRefreshShortcutOrder,
+                                       shortcutOrderCount, s.agendaRefreshShortcutOrder);
 
   s.browseFilesShortcutVisible = clamp(doc["browseFilesShortcutVisible"] | s.browseFilesShortcutVisible,
                                        static_cast<uint8_t>(2), s.browseFilesShortcutVisible);
@@ -850,6 +856,9 @@ bool loadSettingsDirect(CrossPointSettings& s, const JsonDocument& doc, bool* ne
       clamp(doc["sleepShortcutVisible"] | s.sleepShortcutVisible, static_cast<uint8_t>(2), s.sleepShortcutVisible);
   s.opdsBrowserShortcutVisible = clamp(doc["opdsBrowserShortcutVisible"] | s.opdsBrowserShortcutVisible,
                                        static_cast<uint8_t>(2), s.opdsBrowserShortcutVisible);
+  // AGENDA-PATCH
+  s.agendaRefreshShortcutVisible = clamp(doc["agendaRefreshShortcutVisible"] | s.agendaRefreshShortcutVisible,
+                                         static_cast<uint8_t>(2), s.agendaRefreshShortcutVisible);
 
   migrateLegacyStatsShortcut(s, doc, needsResave);
   normalizeShortcutOrderSettings(s);
@@ -1106,6 +1115,7 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   // AGENDA-PATCH: agenda sleep screen server settings.
   doc["agendaServerUrl"] = s.agendaServerUrl;
   doc["agendaServerToken_obf"] = obfuscation::obfuscateToBase64(s.agendaServerToken);
+  doc["agendaUpdateOnSleep"] = s.agendaUpdateOnSleep;
 
   doc["statusBarChapterPageCount"] = s.statusBarChapterPageCount;
   doc["statusBarBookProgressPercentage"] = s.statusBarBookProgressPercentage;
@@ -1166,6 +1176,9 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   doc["sleepShortcutOrder"] = s.sleepShortcutOrder;
   doc["opdsBrowserShortcut"] = s.opdsBrowserShortcut;
   doc["opdsBrowserShortcutOrder"] = s.opdsBrowserShortcutOrder;
+  // AGENDA-PATCH
+  doc["agendaRefreshShortcut"] = s.agendaRefreshShortcut;
+  doc["agendaRefreshShortcutOrder"] = s.agendaRefreshShortcutOrder;
   doc["browseFilesShortcutVisible"] = s.browseFilesShortcutVisible;
   doc["syncDayShortcutVisible"] = s.syncDayShortcutVisible;
   doc["settingsShortcutVisible"] = s.settingsShortcutVisible;
@@ -1184,6 +1197,7 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   doc["screenCleanShortcutVisible"] = s.screenCleanShortcutVisible;
   doc["sleepShortcutVisible"] = s.sleepShortcutVisible;
   doc["opdsBrowserShortcutVisible"] = s.opdsBrowserShortcutVisible;
+  doc["agendaRefreshShortcutVisible"] = s.agendaRefreshShortcutVisible;  // AGENDA-PATCH
 
   return saveJsonDocumentToFile("CPS", path, doc);
 }

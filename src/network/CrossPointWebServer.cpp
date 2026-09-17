@@ -432,6 +432,8 @@ constexpr WebSettingDef WEB_SETTINGS[] = {
     WEB_ENUM(StrId::STR_FILE_TRANSFER, fileTransferShortcut, OPT_SHORTCUT_LOCATION, "fileTransferShortcut",
              StrId::STR_SHORTCUTS_SECTION),
     WEB_ENUM(StrId::STR_SLEEP, sleepShortcut, OPT_SHORTCUT_LOCATION, "sleepShortcut", StrId::STR_SHORTCUTS_SECTION),
+    WEB_ENUM(StrId::STR_REFRESH_AGENDA, agendaRefreshShortcut, OPT_SHORTCUT_LOCATION, "agendaRefreshShortcut",
+             StrId::STR_SHORTCUTS_SECTION),  // AGENDA-PATCH
 
     WEB_DYNAMIC_STRING(StrId::STR_KOREADER_USERNAME, WebDynamicSetting::KoUsername, "koUsername",
                        StrId::STR_KOREADER_SYNC),
@@ -447,6 +449,7 @@ constexpr WebSettingDef WEB_SETTINGS[] = {
                        StrId::STR_CAT_DISPLAY),
     WEB_DYNAMIC_STRING(StrId::STR_AGENDA_SERVER_TOKEN, WebDynamicSetting::AgendaServerToken, "agendaServerToken",
                        StrId::STR_CAT_DISPLAY),
+    WEB_TOGGLE(StrId::STR_AGENDA_UPDATE_ON_SLEEP, agendaUpdateOnSleep, "agendaUpdateOnSleep", StrId::STR_CAT_DISPLAY),
     WEB_TOGGLE(StrId::STR_KO_AUTO_PULL_ON_OPEN, koSyncAutoPullOnOpen, "koSyncAutoPullOnOpen", StrId::STR_KOREADER_SYNC),
     WEB_TOGGLE(StrId::STR_KO_AUTO_PUSH_ON_CLOSE, koSyncAutoPushOnClose, "koSyncAutoPushOnClose",
                StrId::STR_KOREADER_SYNC),

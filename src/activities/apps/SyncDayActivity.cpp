@@ -17,6 +17,7 @@
 #include "components/UITheme.h"
 #include "components/UiAppHelpers.h"
 #include "fontIds.h"
+#include "services/agenda/AgendaService.h"
 #include "util/HeaderDateUtils.h"
 #include "util/TimeUtils.h"
 #include "util/TimeZoneRegistry.h"
@@ -281,6 +282,11 @@ void SyncDayActivity::syncTime() {
   if (effectiveSuccess) {
     createDueReadingStatsBackupWithFeedback();
     requestUpdate(true);
+    // AGENDA-PATCH: Wi-Fi is already up here, so this is a free opportunity
+    // to refresh the cached agenda image. Silent by design, like the stats
+    // backup above: a missing/stale agenda image is not worth interrupting
+    // Sync Day over, and AgendaService itself logs any failure.
+    AgendaService::refresh();
   }
 }
 

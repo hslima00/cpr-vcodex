@@ -19,6 +19,7 @@
 #include "ScreenCleanActivity.h"
 #include "SleepAppActivity.h"
 #include "SyncDayActivity.h"
+#include "activities/agenda/AgendaRefreshActivity.h"
 #include "activities/settings/ClockSyncActivity.h"
 #include "components/UITheme.h"
 #include "components/UiAppHelpers.h"
@@ -198,6 +199,10 @@ void AppsActivity::openApp(const int index) {
     case ShortcutId::OpdsBrowser:
       activityManager.goToBrowser();
       return;
+    // AGENDA-PATCH
+    case ShortcutId::AgendaRefresh:
+      activity = std::make_unique<AgendaRefreshActivity>(renderer, mappedInput);
+      break;
   }
 
   startActivityForResult(std::move(activity), [this](const ActivityResult&) {

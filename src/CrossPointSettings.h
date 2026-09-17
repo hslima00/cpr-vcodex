@@ -494,6 +494,9 @@ class CrossPointSettings {
   uint8_t sleepShortcutOrder = 18;
   uint8_t opdsBrowserShortcut = SHORTCUT_HOME;
   uint8_t opdsBrowserShortcutOrder = 19;
+  // AGENDA-PATCH
+  uint8_t agendaRefreshShortcut = SHORTCUT_APPS;
+  uint8_t agendaRefreshShortcutOrder = 20;
   uint8_t browseFilesShortcutVisible = 1;
   // Legacy Stats shortcut visibility retained for settings.json migration to readingStatsShortcut.
   uint8_t statsShortcutVisible = 1;
@@ -514,6 +517,7 @@ class CrossPointSettings {
   uint8_t screenCleanShortcutVisible = 1;
   uint8_t sleepShortcutVisible = 1;
   uint8_t opdsBrowserShortcutVisible = 1;
+  uint8_t agendaRefreshShortcutVisible = 1;  // AGENDA-PATCH
   // Sunlight fading compensation
   uint8_t fadingFix = 0;
   // Power button return from footnotes (1 = enabled, 0 = disabled)
@@ -556,6 +560,9 @@ class CrossPointSettings {
   // AGENDA-PATCH: agenda sleep screen server settings (web-editable only).
   char agendaServerUrl[128] = "";
   char agendaServerToken[64] = "";
+  // Refresh the cached agenda image right before entering deep sleep. Off by
+  // default: it adds a few seconds and some battery to every sleep.
+  uint8_t agendaUpdateOnSleep = 0;
 
   // ---- Upstream field-name aliases ----
   // Upstream code reads and assigns these as plain fields. Each is a reference

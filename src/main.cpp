@@ -46,6 +46,7 @@
 #include "fontIds.h"
 #include "images/LoadingIcon.h"
 #include "platform/UsbSerialJtagHandoff.h"
+#include "services/agenda/AgendaService.h"
 #include "util/BootRecovery.h"
 #include "util/ButtonNavigator.h"
 #include "util/CprVcodexLogs.h"
@@ -345,6 +346,14 @@ void enterDeepSleep(bool fromTimeout = false) {
   // Every sleep mode leaves a complete retained frame on the e-ink panel. Keep
   // it visible until the first useful reader or home paint replaces it.
   APP_STATE.showBootScreen = false;
+
+  // AGENDA-PATCH: opportunistic refresh before the sleep screen renders.
+  // Off by default; only runs if Wi-Fi already happens to be connected —
+  // this path deliberately never brings Wi-Fi up on its own, since doing so
+  // this close to power-down risks delaying or hanging sleep entry.
+  if (SETTINGS.agendaUpdateOnSleep && SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::AGENDA) {
+    AgendaService::refresh();
+  }
 
   // Commit to sleeping before goToSleep() runs the outgoing activity's onExit():
   // a WiFi activity would otherwise silentRestart() here and reboot instead.
