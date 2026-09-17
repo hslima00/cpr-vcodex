@@ -2,8 +2,8 @@
   "name": "CPR-vCodex (agenda fork)",
   "version": "1.6.0.38-cpr-vcodex",
   "downloadUrl": "https://github.com/hslima00/cpr-vcodex/releases/download/1.6.0.38-cpr-vcodex/1.6.0.38-cpr-vcodex.bin",
-  "size": 6108240,
-  "sha256": "ff54e87654a0ebebc5f1f59194d769fc104945e35752227f63f7379aeaa0a884",
+  "size": 6108128,
+  "sha256": "f64bc93c81baf1ab3a6f79a736c3aa5cb8cb1b8e2e184a26dd8be1e3838c0064",
   "source": {
     "type": "github-release",
     "repo": "hslima00/cpr-vcodex",
