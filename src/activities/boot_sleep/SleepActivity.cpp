@@ -1317,6 +1317,13 @@ void SleepActivity::renderCustomSleepScreen() const {
 // function never touches the network; it only reads what AgendaService
 // already wrote. Falls back to the default sleep screen if no cached image
 // exists yet (e.g. first boot, before any successful refresh).
+//
+// Deliberately skips SleepScreenCache: its key is (path, file size), and an
+// uncompressed 1-bit 480x800 BMP is the same size on every refresh no matter
+// what changed inside it, so that cache would keep serving the very first
+// agenda image forever. A fresh 1-bit bitmap decode is cheap enough (no
+// PNGdec-style contiguous-buffer cost) that skipping the cache costs nothing
+// that matters here.
 void SleepActivity::renderAgendaSleepScreen() const {
   static constexpr const char* AGENDA_BMP_PATH = "/.crosspoint/agenda.bmp";
   static constexpr const char* AGENDA_PNG_PATH = "/.crosspoint/agenda.png";
@@ -1328,11 +1335,6 @@ void SleepActivity::renderAgendaSleepScreen() const {
     GUI.drawPopup(renderer, tr(STR_ENTERING_SLEEP));
     Bitmap bitmap(file, true);
     if (bitmap.parseHeaders() == BmpReaderError::Ok) {
-      if (SleepScreenCache::load(renderer, AGENDA_BMP_PATH)) {
-        displaySleepBuffer(renderer);
-        file.close();
-        return;
-      }
       renderBitmapSleepScreen(bitmap, AGENDA_BMP_PATH);
       file.close();
       return;
