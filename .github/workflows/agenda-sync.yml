@@ -188,28 +188,37 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LATEST_TAG: ${{ steps.check.outputs.latest_tag }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          IS_CONFLICT: ${{ steps.rebase.outputs.conflict || 'false' }}
         run: |
           set -euo pipefail
-          conflict="${{ steps.rebase.outputs.conflict || 'false' }}"
-          if [ "$conflict" = "true" ]; then
+          tag="${LATEST_TAG:-unknown tag}"
+          if [ "$IS_CONFLICT" = "true" ]; then
             failed_step="rebase (conflict)"
           else
             failed_step="see the failed step in the run log"
           fi
+
+          body_file="$(mktemp)"
+          cat > "$body_file" <<BODY
+          Automated sync of the \`agenda\` branch onto upstream tag \`${LATEST_TAG}\` failed.
+
+          **Failed at:** ${failed_step}
+          **Run:** ${RUN_URL}
+
+          Nothing was pushed or published. If this was a rebase conflict, resolve it manually:
+
+          \`\`\`
+          git fetch https://github.com/${UPSTREAM_REPO}.git ${LATEST_TAG}
+          git checkout agenda
+          git rebase FETCH_HEAD
+          # resolve conflicts using AGENDA_PATCH.md as the map
+          python3 scripts/check_agenda_enum.py
+          git push --force-with-lease origin agenda
+          \`\`\`
+          BODY
+
           gh issue create --repo "${FORK_REPO}" \
-            --title "Agenda sync failed: ${{ steps.check.outputs.latest_tag || 'unknown tag' }}" \
-            --body "Automated sync of the \`agenda\` branch onto upstream tag \`${{ steps.check.outputs.latest_tag }}\` failed.
-
-**Failed at:** ${failed_step}
-**Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-Nothing was pushed or published. If this was a rebase conflict, resolve it manually:
-
-\`\`\`
-git fetch https://github.com/${UPSTREAM_REPO}.git ${{ steps.check.outputs.latest_tag }}
-git checkout agenda
-git rebase FETCH_HEAD
-# resolve conflicts using AGENDA_PATCH.md as the map
-python3 scripts/check_agenda_enum.py
-git push --force-with-lease origin agenda
-\`\`\`"
+            --title "Agenda sync failed: ${tag}" \
+            --body-file "$body_file"
