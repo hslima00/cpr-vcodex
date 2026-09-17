@@ -28,6 +28,7 @@ void AgendaRefreshActivity::onEnter() {
 
   if (SETTINGS.agendaServerUrl[0] == '\0') {
     state = NOT_CONFIGURED;
+    requestUpdate();
     return;
   }
 
