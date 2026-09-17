@@ -1,0 +1,215 @@
+name: Agenda upstream sync
+
+# Keeps the `agenda` branch rebased onto the latest franssjz/cpr-vcodex
+# release tag, builds it, and — only if the rebase, enum-collision check and
+# build all succeed — publishes a release under the SAME tag name on this
+# fork (the repo, hslima0/cpr-vcodex vs franssjz/cpr-vcodex, is what tells
+# the two apart; the build's own tag-format check in scripts/git_branch.py
+# requires an exact `X.Y.Z.N-cpr-vcodex` match, so a `-agenda` suffix on the
+# tag itself isn't an option) and regenerates docs/firmware/manifest.json
+# (what OtaUpdater.cpp's redirected OTA check fetches). Never pushes or
+# publishes anything on failure; opens an issue instead. See AGENDA_PATCH.md
+# for the touch points this protects.
+
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Run the full rebase/build/publish cycle even if agenda is already synced (smoke test)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: agenda-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+env:
+  UPSTREAM_REPO: franssjz/cpr-vcodex
+  FORK_REPO: ${{ github.repository }}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout agenda branch (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: agenda
+          submodules: recursive
+
+      - name: Configure git identity
+        run: |
+          git config user.name "agenda-sync[bot]"
+          git config user.email "agenda-sync-bot@users.noreply.github.com"
+
+      - name: Find latest upstream tag and check if already synced
+        id: check
+        run: |
+          set -euo pipefail
+          latest_tag=$(git ls-remote --tags --refs "https://github.com/${UPSTREAM_REPO}.git" \
+            | awk '{print $2}' | sed 's#refs/tags/##' | grep -- '-cpr-vcodex$' | sort -V | tail -1)
+          if [ -z "$latest_tag" ]; then
+            echo "::error::Could not find any *-cpr-vcodex tag on ${UPSTREAM_REPO}"
+            exit 1
+          fi
+          echo "latest_tag=${latest_tag}" >> "$GITHUB_OUTPUT"
+
+          git fetch "https://github.com/${UPSTREAM_REPO}.git" "refs/tags/${latest_tag}:refs/tags/upstream-latest" --force
+
+          if git merge-base --is-ancestor upstream-latest HEAD 2>/dev/null; then
+            echo "already_synced=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_synced=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Stop here (already synced, no force)
+        if: steps.check.outputs.already_synced == 'true' && github.event.inputs.force != 'true'
+        run: echo "agenda already contains ${{ steps.check.outputs.latest_tag }}; nothing to do."
+
+      - name: Rebase agenda onto latest upstream tag
+        if: steps.check.outputs.already_synced == 'false'
+        id: rebase
+        run: |
+          set -euo pipefail
+          if ! git rebase upstream-latest; then
+            git rebase --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          git submodule update --init --recursive
+
+      - name: Enum collision check
+        if: steps.check.outputs.already_synced == 'false' || github.event.inputs.force == 'true'
+        id: enum_check
+        run: python3 scripts/check_agenda_enum.py
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.already_synced == 'false' || github.event.inputs.force == 'true'
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        if: steps.check.outputs.already_synced == 'false' || github.event.inputs.force == 'true'
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: false
+
+      - name: Install PlatformIO Core
+        if: steps.check.outputs.already_synced == 'false' || github.event.inputs.force == 'true'
+        run: |
+          set -euo pipefail
+          uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.19.zip
+          uv pip install --system -U "littlefs-python>=0.16.0" "fatfs-ng>=0.1.14" "pyyaml>=6.0.2" \
+            "rich-click>=1.8.6" "zopfli>=0.2.2" "intelhex>=2.3.0" "rich>=14.0.0" "urllib3<2" \
+            "cryptography>=45.0.3" "certifi>=2025.8.3" "ecdsa>=0.19.1" "bitstring>=4.3.1" \
+            "reedsolo>=1.5.3,<1.8" "esp-idf-size>=2.0.0" "esp-coredump>=1.14.0"
+
+      - name: Cache PlatformIO packages
+        if: steps.check.outputs.already_synced == 'false' || github.event.inputs.force == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+          restore-keys: pio-${{ runner.os }}-
+
+      - name: Build default environment
+        if: steps.check.outputs.already_synced == 'false' || github.event.inputs.force == 'true'
+        id: build
+        run: |
+          set -euo pipefail
+          pio run -e default -j1
+
+      - name: Build gh_release environment
+        if: steps.check.outputs.already_synced == 'false' || github.event.inputs.force == 'true'
+        env:
+          VCODEX_RELEASE_TAG: ${{ steps.check.outputs.latest_tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          pio run -e gh_release -j1
+
+      - name: Push rebased agenda branch
+        if: steps.check.outputs.already_synced == 'false'
+        run: git push --force-with-lease origin agenda
+
+      - name: Sync upstream mirror branch
+        if: steps.check.outputs.already_synced == 'false'
+        run: |
+          set -euo pipefail
+          git fetch "https://github.com/${UPSTREAM_REPO}.git" master --force
+          git push --force-with-lease origin FETCH_HEAD:upstream
+
+      - name: Publish release on this fork
+        if: steps.check.outputs.already_synced == 'false' || github.event.inputs.force == 'true'
+        id: publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${{ steps.check.outputs.latest_tag }}"
+          artifact="artifacts/${tag}.bin"
+          test -f "$artifact" || { echo "::error::Expected $artifact was not created"; exit 1; }
+
+          if gh release view "$tag" --repo "${FORK_REPO}" >/dev/null 2>&1; then
+            gh release upload "$tag" "${artifact}#${tag}.bin" --repo "${FORK_REPO}" --clobber
+          else
+            gh release create "$tag" "${artifact}#${tag}.bin" \
+              --repo "${FORK_REPO}" \
+              --title "$tag" \
+              --notes "Automated agenda-branch build, rebased onto upstream ${{ steps.check.outputs.latest_tag }}."
+          fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Regenerate OTA manifest
+        if: steps.check.outputs.already_synced == 'false' || github.event.inputs.force == 'true'
+        run: python3 scripts/agenda_ota_manifest.py --repo "${FORK_REPO}" --tag "${{ steps.publish.outputs.tag }}"
+
+      - name: Commit manifest
+        if: steps.check.outputs.already_synced == 'false' || github.event.inputs.force == 'true'
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- docs/firmware/manifest.json; then
+            echo "manifest unchanged"
+          else
+            git add docs/firmware/manifest.json
+            git commit -m "Update OTA manifest for ${{ steps.publish.outputs.tag }}"
+            git push origin HEAD:agenda
+          fi
+
+      - name: Open an issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          conflict="${{ steps.rebase.outputs.conflict || 'false' }}"
+          if [ "$conflict" = "true" ]; then
+            failed_step="rebase (conflict)"
+          else
+            failed_step="see the failed step in the run log"
+          fi
+          gh issue create --repo "${FORK_REPO}" \
+            --title "Agenda sync failed: ${{ steps.check.outputs.latest_tag || 'unknown tag' }}" \
+            --body "Automated sync of the \`agenda\` branch onto upstream tag \`${{ steps.check.outputs.latest_tag }}\` failed.
+
+**Failed at:** ${failed_step}
+**Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+Nothing was pushed or published. If this was a rebase conflict, resolve it manually:
+
+\`\`\`
+git fetch https://github.com/${UPSTREAM_REPO}.git ${{ steps.check.outputs.latest_tag }}
+git checkout agenda
+git rebase FETCH_HEAD
+# resolve conflicts using AGENDA_PATCH.md as the map
+python3 scripts/check_agenda_enum.py
+git push --force-with-lease origin agenda
+\`\`\`"

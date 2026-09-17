@@ -24,10 +24,16 @@
 #include "version.h"
 
 namespace {
-constexpr char firmwareManifestUrl[] = "https://franssjz.github.io/cpr-vcodex/firmware/manifest.json";
+// AGENDA-PATCH: redirected from franssjz/cpr-vcodex to this fork so OTA never
+// silently overwrites the agenda feature with an upstream build. No GitHub
+// Pages setup needed: raw.githubusercontent.com and jsdelivr's GitHub mirror
+// both serve docs/firmware/manifest.json directly off the `agenda` branch,
+// which scripts/agenda_ota_manifest.py regenerates on every fork release.
+constexpr char firmwareManifestUrl[] =
+    "https://raw.githubusercontent.com/hslima00/cpr-vcodex/agenda/docs/firmware/manifest.json";
 constexpr char firmwareManifestFallbackUrl[] =
-    "https://raw.githubusercontent.com/franssjz/cpr-vcodex/master/docs/firmware/manifest.json";
-constexpr char latestReleaseUrl[] = "https://api.github.com/repos/franssjz/cpr-vcodex/releases/latest";
+    "https://cdn.jsdelivr.net/gh/hslima00/cpr-vcodex@agenda/docs/firmware/manifest.json";
+constexpr char latestReleaseUrl[] = "https://api.github.com/repos/hslima00/cpr-vcodex/releases/latest";
 
 struct ParsedVersion {
   int parts[4] = {0, 0, 0, 0};
