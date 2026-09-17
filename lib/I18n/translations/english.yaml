@@ -934,3 +934,7 @@ STR_SAVE_PROGRESS_FAILED: "Could not save progress"
 STR_FOCUS_READING: "Focus Reading"
 STR_SELECT_FIRMWARE_FILE: "Select firmware file (.bin)"
 STR_NO_BIN_FILES: "No .bin files found"
+
+STR_AGENDA: "Agenda"
+STR_AGENDA_SERVER_URL: "Agenda Server URL"
+STR_AGENDA_SERVER_TOKEN: "Agenda Server Token"

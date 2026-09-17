@@ -33,6 +33,9 @@ class SleepActivity final : public Activity {
   void renderLastScreenSleepScreen() const;
   void renderBlankSleepScreen() const;
   bool resolveLastBookCoverPath(std::string& coverBmpPath) const;
+  // AGENDA-PATCH: calendar/TODO sleep screen fetched by AgendaService; falls back
+  // to the default sleep screen when no cached image is present on the SD card.
+  void renderAgendaSleepScreen() const;
 
   // True when sleep was triggered by the inactivity timeout (Quick Resume after timeout).
   bool fromTimeout = false;

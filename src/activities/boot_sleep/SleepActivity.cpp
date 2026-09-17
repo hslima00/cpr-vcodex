@@ -1237,6 +1237,10 @@ void SleepActivity::onEnter() {
     case (CrossPointSettings::SLEEP_SCREEN_MODE::CUSTOM_STATS_V2):
       renderCustomStatsSleepScreen(true);
       break;
+    // AGENDA-PATCH
+    case (CrossPointSettings::SLEEP_SCREEN_MODE::AGENDA):
+      renderAgendaSleepScreen();
+      break;
     default:
       renderDefaultSleepScreen();
       break;
@@ -1303,6 +1307,40 @@ void SleepActivity::renderCustomSleepScreen() const {
   }
 
   if (renderPngSleepScreen("/sleep.png")) {
+    return;
+  }
+
+  renderDefaultSleepScreen();
+}
+
+// AGENDA-PATCH: renders the image AgendaService cached on the SD card. This
+// function never touches the network; it only reads what AgendaService
+// already wrote. Falls back to the default sleep screen if no cached image
+// exists yet (e.g. first boot, before any successful refresh).
+void SleepActivity::renderAgendaSleepScreen() const {
+  static constexpr const char* AGENDA_BMP_PATH = "/.crosspoint/agenda.bmp";
+  static constexpr const char* AGENDA_PNG_PATH = "/.crosspoint/agenda.png";
+
+  releasePngSleepMemory(renderer, true);
+
+  HalFile file;
+  if (Storage.openFileForRead("SLP", AGENDA_BMP_PATH, file)) {
+    GUI.drawPopup(renderer, tr(STR_ENTERING_SLEEP));
+    Bitmap bitmap(file, true);
+    if (bitmap.parseHeaders() == BmpReaderError::Ok) {
+      if (SleepScreenCache::load(renderer, AGENDA_BMP_PATH)) {
+        displaySleepBuffer(renderer);
+        file.close();
+        return;
+      }
+      renderBitmapSleepScreen(bitmap, AGENDA_BMP_PATH);
+      file.close();
+      return;
+    }
+    file.close();
+  }
+
+  if (renderPngSleepScreen(AGENDA_PNG_PATH)) {
     return;
   }
 

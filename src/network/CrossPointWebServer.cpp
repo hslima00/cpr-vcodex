@@ -223,7 +223,16 @@ int webSettingsCategoryIndex(StrId category) {
 }
 
 enum class WebSettingType : uint8_t { Toggle, Enum, Value, String };
-enum class WebDynamicSetting : uint8_t { None, KoUsername, KoPassword, KoServerUrl, KoMatchMethod };
+enum class WebDynamicSetting : uint8_t {
+  None,
+  KoUsername,
+  KoPassword,
+  KoServerUrl,
+  KoMatchMethod,
+  // AGENDA-PATCH
+  AgendaServerUrl,
+  AgendaServerToken
+};
 
 struct WebSettingDef {
   StrId nameId;
@@ -432,6 +441,12 @@ constexpr WebSettingDef WEB_SETTINGS[] = {
                        StrId::STR_KOREADER_SYNC),
     WEB_DYNAMIC(StrId::STR_DOCUMENT_MATCHING, WebDynamicSetting::KoMatchMethod, WebSettingType::Enum, OPT_KO_MATCH,
                 "koMatchMethod", StrId::STR_KOREADER_SYNC),
+
+    // AGENDA-PATCH
+    WEB_DYNAMIC_STRING(StrId::STR_AGENDA_SERVER_URL, WebDynamicSetting::AgendaServerUrl, "agendaServerUrl",
+                       StrId::STR_CAT_DISPLAY),
+    WEB_DYNAMIC_STRING(StrId::STR_AGENDA_SERVER_TOKEN, WebDynamicSetting::AgendaServerToken, "agendaServerToken",
+                       StrId::STR_CAT_DISPLAY),
     WEB_TOGGLE(StrId::STR_KO_AUTO_PULL_ON_OPEN, koSyncAutoPullOnOpen, "koSyncAutoPullOnOpen", StrId::STR_KOREADER_SYNC),
     WEB_TOGGLE(StrId::STR_KO_AUTO_PUSH_ON_CLOSE, koSyncAutoPushOnClose, "koSyncAutoPushOnClose",
                StrId::STR_KOREADER_SYNC),
@@ -2040,6 +2055,15 @@ void CrossPointWebServer::handleGetSettings() const {
           case WebDynamicSetting::KoServerUrl:
             value = KOREADER_STORE.getServerUrl();
             break;
+          // AGENDA-PATCH
+          case WebDynamicSetting::AgendaServerUrl:
+            value = SETTINGS.agendaServerUrl;
+            break;
+          case WebDynamicSetting::AgendaServerToken:
+            // Write-only in the browser, same as KoPassword: the stored token
+            // never round-trips, only whether one is configured.
+            value.clear();
+            break;
           default:
             break;
         }
@@ -2047,6 +2071,10 @@ void CrossPointWebServer::handleGetSettings() const {
         if (s.dynamic == WebDynamicSetting::KoPassword) {
           server->sendContent(",\"configured\":", 14);
           server->sendContent(KOREADER_STORE.getPassword().empty() ? "false" : "true");
+        }
+        if (s.dynamic == WebDynamicSetting::AgendaServerToken) {
+          server->sendContent(",\"configured\":", 14);
+          server->sendContent(SETTINGS.agendaServerToken[0] != '\0' ? "true" : "false");
         }
         break;
       }
@@ -2152,6 +2180,19 @@ void CrossPointWebServer::handlePostSettings() {
           case WebDynamicSetting::KoServerUrl:
             KOREADER_STORE.setServerUrl(val);
             saveKOReader = true;
+            break;
+          // AGENDA-PATCH
+          case WebDynamicSetting::AgendaServerUrl:
+            strncpy(SETTINGS.agendaServerUrl, val.c_str(), sizeof(SETTINGS.agendaServerUrl) - 1);
+            SETTINGS.agendaServerUrl[sizeof(SETTINGS.agendaServerUrl) - 1] = '\0';
+            saveSettings = true;
+            break;
+          case WebDynamicSetting::AgendaServerToken:
+            // Same write-only convention as KoPassword: the frontend only sends
+            // this field when the user actually typed a replacement value.
+            strncpy(SETTINGS.agendaServerToken, val.c_str(), sizeof(SETTINGS.agendaServerToken) - 1);
+            SETTINGS.agendaServerToken[sizeof(SETTINGS.agendaServerToken) - 1] = '\0';
+            saveSettings = true;
             break;
           default:
             break;

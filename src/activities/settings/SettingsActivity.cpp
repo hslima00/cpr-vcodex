@@ -94,6 +94,7 @@ std::vector<StrId> buildSleepScreenValues() {
   values[CrossPointSettings::CUSTOM_STATS_V2] = StrId::STR_CUSTOM_STATS_V2;
   values[CrossPointSettings::QUICK_RESUME] = StrId::STR_QUICK_RESUME;
   values[CrossPointSettings::TRANSPARENT_CUSTOM] = StrId::STR_TRANSPARENT;
+  values[CrossPointSettings::AGENDA] = StrId::STR_AGENDA;  // AGENDA-PATCH
   return values;
 }
 

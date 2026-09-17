@@ -658,6 +658,18 @@ bool loadSettingsDirect(CrossPointSettings& s, const JsonDocument& doc, bool* ne
     s.opdsPassword[sizeof(s.opdsPassword) - 1] = '\0';
   }
 
+  // AGENDA-PATCH: agenda sleep screen server settings.
+  loadString("agendaServerUrl", s.agendaServerUrl, sizeof(s.agendaServerUrl));
+  {
+    bool ok = false;
+    std::string token = obfuscation::deobfuscateFromBase64(doc["agendaServerToken_obf"] | "", &ok);
+    if (!ok) {
+      token = std::string(s.agendaServerToken);
+    }
+    strncpy(s.agendaServerToken, token.c_str(), sizeof(s.agendaServerToken) - 1);
+    s.agendaServerToken[sizeof(s.agendaServerToken) - 1] = '\0';
+  }
+
   loadToggle("statusBarChapterPageCount", s.statusBarChapterPageCount);
   loadToggle("statusBarBookProgressPercentage", s.statusBarBookProgressPercentage);
   loadEnum("statusBarProgressBar", s.statusBarProgressBar, CrossPointSettings::STATUS_BAR_PROGRESS_BAR_COUNT);
@@ -1090,6 +1102,10 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   doc["opdsFilenameFormat"] = s.opdsFilenameFormat;
   doc["koSyncAutoPullOnOpen"] = s.koSyncAutoPullOnOpen;
   doc["koSyncAutoPushOnClose"] = s.koSyncAutoPushOnClose;
+
+  // AGENDA-PATCH: agenda sleep screen server settings.
+  doc["agendaServerUrl"] = s.agendaServerUrl;
+  doc["agendaServerToken_obf"] = obfuscation::obfuscateToBase64(s.agendaServerToken);
 
   doc["statusBarChapterPageCount"] = s.statusBarChapterPageCount;
   doc["statusBarBookProgressPercentage"] = s.statusBarBookProgressPercentage;

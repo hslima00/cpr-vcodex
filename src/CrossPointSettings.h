@@ -34,6 +34,8 @@ class CrossPointSettings {
     // Upstream additions, appended so persisted fork indices stay valid.
     QUICK_RESUME = 11,
     TRANSPARENT_CUSTOM = 12,
+    // AGENDA-PATCH: appended so persisted fork/upstream indices stay valid.
+    AGENDA = 13,
     SLEEP_SCREEN_MODE_COUNT
   };
   enum SLEEP_SCREEN_COVER_MODE { FIT = 0, CROP = 1, SLEEP_SCREEN_COVER_MODE_COUNT };
@@ -550,6 +552,10 @@ class CrossPointSettings {
   uint16_t keyboardLayouts = 0;
   // Quick Resume: keep current content visible with moon icon instead of showing a static sleep screen.
   uint8_t quickResumeSleepScreen = QUICK_RESUME_NEVER;
+
+  // AGENDA-PATCH: agenda sleep screen server settings (web-editable only).
+  char agendaServerUrl[128] = "";
+  char agendaServerToken[64] = "";
 
   // ---- Upstream field-name aliases ----
   // Upstream code reads and assigns these as plain fields. Each is a reference
