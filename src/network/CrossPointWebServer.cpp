@@ -248,6 +248,8 @@ struct WebSettingDef {
   const char* key;
 };
 
+// Indexed by CrossPointSettings::SLEEP_SCREEN_MODE — keep in sync with
+// SettingsActivity.cpp's buildSleepScreenValues(), the on-device equivalent.
 constexpr StrId OPT_SLEEP_SCREEN[] = {StrId::STR_DARK,
                                       StrId::STR_LIGHT,
                                       StrId::STR_CUSTOM,
@@ -258,7 +260,10 @@ constexpr StrId OPT_SLEEP_SCREEN[] = {StrId::STR_DARK,
                                       StrId::STR_COVER_STATS,
                                       StrId::STR_COVER_STATS_V2,
                                       StrId::STR_CUSTOM_STATS,
-                                      StrId::STR_CUSTOM_STATS_V2};
+                                      StrId::STR_CUSTOM_STATS_V2,
+                                      StrId::STR_QUICK_RESUME,
+                                      StrId::STR_TRANSPARENT,
+                                      StrId::STR_AGENDA};  // AGENDA-PATCH
 constexpr StrId OPT_FIT_CROP[] = {StrId::STR_FIT, StrId::STR_CROP};
 constexpr StrId OPT_SLEEP_FILTER[] = {StrId::STR_NONE_OPT, StrId::STR_FILTER_CONTRAST, StrId::STR_INVERTED};
 constexpr StrId OPT_HIDE_BATTERY[] = {StrId::STR_NEVER, StrId::STR_IN_READER, StrId::STR_ALWAYS};
