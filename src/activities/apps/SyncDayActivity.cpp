@@ -98,6 +98,10 @@ void SyncDayActivity::onEnter() {
     rowItems[i].actionValue = static_cast<int16_t>(i);
   }
   refreshRowValues();
+
+  if (autoStart) {
+    triggerSync();
+  }
 }
 
 void SyncDayActivity::onExit() {
@@ -127,14 +131,7 @@ void SyncDayActivity::activateIndex(const int index) {
   nav.selected = index;
   if (index == ROW_SYNC_NOW) {
     app.clearTapFlash();
-    const bool chooseWifiManually = SETTINGS.syncDayWifiChoice == CrossPointSettings::SYNC_DAY_WIFI_MANUAL;
-    if (chooseWifiManually) {
-      openWifiSelection(false);
-    } else if (isWifiConnected()) {
-      syncTime();
-    } else {
-      openWifiSelection(true);
-    }
+    triggerSync();
   } else if (index == ROW_SET_DATE) {
     app.clearTapFlash();
     openManualDateSelection();
@@ -149,6 +146,17 @@ void SyncDayActivity::activateIndex(const int index) {
     SETTINGS.dateFormat = (SETTINGS.dateFormat + 1) % CrossPointSettings::DATE_FORMAT_COUNT;
     SETTINGS.saveToFile();
     requestUpdate();
+  }
+}
+
+void SyncDayActivity::triggerSync() {
+  const bool chooseWifiManually = SETTINGS.syncDayWifiChoice == CrossPointSettings::SYNC_DAY_WIFI_MANUAL;
+  if (chooseWifiManually) {
+    openWifiSelection(false);
+  } else if (isWifiConnected()) {
+    syncTime();
+  } else {
+    openWifiSelection(true);
   }
 }
 

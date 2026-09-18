@@ -394,6 +394,8 @@ constexpr WebSettingDef WEB_SETTINGS[] = {
     WEB_ENUM(StrId::STR_CHOOSE_WIFI, syncDayWifiChoice, OPT_AUTO_MANUAL, "syncDayWifiChoice", StrId::STR_APPS),
     WEB_ENUM(StrId::STR_SYNC_DAY_REMINDER_EVERY, syncDayReminderStarts, OPT_REMINDER_STARTS, "syncDayReminderStarts",
              StrId::STR_APPS),
+    // AGENDA-PATCH
+    WEB_TOGGLE(StrId::STR_SYNC_DAY_ON_WAKE, syncDayOnWake, "syncDayOnWake", StrId::STR_APPS),
     WEB_ENUM(StrId::STR_DATE_FORMAT, dateFormat, OPT_DATE_FORMAT, "dateFormat", StrId::STR_APPS),
     WEB_ENUM(StrId::STR_DAILY_GOAL, dailyGoalTarget, OPT_DAILY_GOAL, "dailyGoalTarget", StrId::STR_APPS),
     WEB_ENUM(StrId::STR_READING_STATS_AUTOBACKUP, readingStatsAutoBackup, OPT_STATS_AUTOBACKUP,

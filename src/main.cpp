@@ -40,6 +40,8 @@
 #include "UiFontSelection.h"
 #include "activities/Activity.h"
 #include "activities/ActivityManager.h"
+#include "activities/apps/SyncDayActivity.h"
+#include "activities/settings/ClockSyncActivity.h"
 #include "activities/settings/OtaUpdateActivity.h"
 #include "activities/settings/SdFirmwareUpdateActivity.h"
 #include "components/UITheme.h"
@@ -806,6 +808,21 @@ void setup() {
       }
       APP_STATE.saveToFile();
       activityManager.goToReader(path, allowFastInitialReaderRefresh);
+    }
+
+    // AGENDA-PATCH: push the Sync Day screen on top of whatever we just
+    // booted into. Visible by design (confirmed with the user) — the same
+    // on-screen flow as tapping Sync Day manually, just triggered
+    // automatically on a real wake/cold boot. Deliberately scoped to this
+    // branch only: silent resumes, OTA, crash report and recovery mode
+    // above are not user-facing wakes.
+    if (SETTINGS.syncDayOnWake) {
+      if (SETTINGS.isHardwareRtcAutoDayClockActive()) {
+        activityManager.pushActivity(std::make_unique<ClockSyncActivity>(renderer, mappedInputManager));
+      } else {
+        activityManager.pushActivity(
+            std::make_unique<SyncDayActivity>(renderer, mappedInputManager, /*autoStart=*/true));
+      }
     }
   }
 

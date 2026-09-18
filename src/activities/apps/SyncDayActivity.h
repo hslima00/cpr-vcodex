@@ -21,10 +21,16 @@ class SyncDayActivity final : public UiListActivity {
   std::string networkStatus;
   freeink::ui::ListItem rowItems[ACTION_COUNT]{};
 
+  // AGENDA-PATCH: auto-runs the same "Sync Now" flow as ROW_SYNC_NOW on
+  // enter, for the "Sync Day on wake" setting. False for the normal
+  // Apps-opened screen, where the user picks Sync Now themselves.
+  bool autoStart = false;
+
   void refreshRowValues();
   void openWifiSelection(bool allowAutoConnect);
   void openManualDateSelection();
   void openTimeZoneSelection();
+  void triggerSync();
   void syncTime();
   void showTransientPopup(const char* message, int progress = -1, unsigned long delayMs = 0);
   void createDueReadingStatsBackupWithFeedback();
@@ -39,8 +45,8 @@ class SyncDayActivity final : public UiListActivity {
   void drawChrome() override;
 
  public:
-  explicit SyncDayActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)
-      : UiListActivity("SyncDay", renderer, mappedInput) {}
+  explicit SyncDayActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, bool autoStart = false)
+      : UiListActivity("SyncDay", renderer, mappedInput), autoStart(autoStart) {}
 
   void onEnter() override;
   void onExit() override;

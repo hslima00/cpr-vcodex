@@ -13,6 +13,7 @@
 #include "activities/network/WifiSelectionActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "services/agenda/AgendaService.h"
 #include "util/TimeUtils.h"
 
 namespace {
@@ -107,6 +108,11 @@ void ClockSyncActivity::runSync() {
   }
   state = SUCCESS;
   requestUpdate();
+
+  // AGENDA-PATCH: WiFi is already up here, same free-opportunity refresh as
+  // SyncDayActivity::syncTime() — hardware-RTC boards use this activity as
+  // their "Sync Day" instead (see AppsActivity::openApp()'s SyncDay case).
+  AgendaService::refresh();
 }
 
 void ClockSyncActivity::loop() {

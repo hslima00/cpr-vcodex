@@ -563,6 +563,9 @@ class CrossPointSettings {
   // Refresh the cached agenda image right before entering deep sleep. Off by
   // default: it adds a few seconds and some battery to every sleep.
   uint8_t agendaUpdateOnSleep = 0;
+  // Automatically run Sync Day (visible, same screen as the manual Apps
+  // shortcut) on every wake from sleep / cold boot. Off by default.
+  uint8_t syncDayOnWake = 0;
 
   // ---- Upstream field-name aliases ----
   // Upstream code reads and assigns these as plain fields. Each is a reference

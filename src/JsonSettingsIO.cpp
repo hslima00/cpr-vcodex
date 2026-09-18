@@ -670,6 +670,7 @@ bool loadSettingsDirect(CrossPointSettings& s, const JsonDocument& doc, bool* ne
     s.agendaServerToken[sizeof(s.agendaServerToken) - 1] = '\0';
   }
   loadToggle("agendaUpdateOnSleep", s.agendaUpdateOnSleep);
+  loadToggle("syncDayOnWake", s.syncDayOnWake);
 
   loadToggle("statusBarChapterPageCount", s.statusBarChapterPageCount);
   loadToggle("statusBarBookProgressPercentage", s.statusBarBookProgressPercentage);
@@ -1116,6 +1117,7 @@ bool JsonSettingsIO::saveSettings(const CrossPointSettings& s, const char* path)
   doc["agendaServerUrl"] = s.agendaServerUrl;
   doc["agendaServerToken_obf"] = obfuscation::obfuscateToBase64(s.agendaServerToken);
   doc["agendaUpdateOnSleep"] = s.agendaUpdateOnSleep;
+  doc["syncDayOnWake"] = s.syncDayOnWake;
 
   doc["statusBarChapterPageCount"] = s.statusBarChapterPageCount;
   doc["statusBarBookProgressPercentage"] = s.statusBarBookProgressPercentage;
